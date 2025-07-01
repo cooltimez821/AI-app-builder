@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top 25 Easy Apps to Build with AI</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">🤖 AI App Builder</h1>
+            <nav class="nav">
+                <a href="#apps" class="nav-link">Apps</a>
+                <a href="#about" class="nav-link">About</a>
+                <a href="#contact" class="nav-link">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1 class="hero-title">The Best Apps for AI to Build</h1>
+                <p class="hero-subtitle">Discover the top 25 easiest and most practical apps you can build with AI assistance</p>
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search apps..." class="search-input">
+                    <button class="search-btn">🔍</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="apps" class="apps-section">
+            <div class="container">
+                <div class="filters">
+                    <button class="filter-btn active" data-category="all">All</button>
+                    <button class="filter-btn" data-category="productivity">Productivity</button>
+                    <button class="filter-btn" data-category="utility">Utility</button>
+                    <button class="filter-btn" data-category="entertainment">Entertainment</button>
+                    <button class="filter-btn" data-category="business">Business</button>
+                </div>
+                
+                <div class="apps-grid" id="appsGrid">
+                    <!-- Apps will be populated by JavaScript -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 AI App Builder. Built with AI assistance.</p>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
