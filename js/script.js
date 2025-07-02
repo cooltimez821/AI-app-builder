@@ -699,3 +699,344 @@ startBuilding = startBuildingEnhanced;
 document.addEventListener('DOMContentLoaded', function() {
     initializeEnhancedFeatures();
 });
+
+// Progress Tracker & Random App Generator (keeping original design)
+
+// Progress tracking storage
+let completedApps = JSON.parse(localStorage.getItem('completedApps') || '[]');
+let appProgress = JSON.parse(localStorage.getItem('appProgress') || '{}');
+
+// Initialize progress tracking
+function initializeProgressTracker() {
+    // Add progress data to existing apps
+    apps.forEach(app => {
+        if (!appProgress[app.title]) {
+            appProgress[app.title] = {
+                started: false,
+                completed: false,
+                startDate: null,
+                completedDate: null,
+                timeSpent: 0
+            };
+        }
+    });
+    updateProgressDisplay();
+}
+
+// Mark app as started
+function markAppStarted(appTitle) {
+    if (!appProgress[appTitle].started) {
+        appProgress[appTitle].started = true;
+        appProgress[appTitle].startDate = new Date().toISOString();
+        localStorage.setItem('appProgress', JSON.stringify(appProgress));
+        updateProgressDisplay();
+    }
+}
+
+// Mark app as completed
+function markAppCompleted(appTitle) {
+    appProgress[appTitle].completed = true;
+    appProgress[appTitle].completedDate = new Date().toISOString();
+    
+    if (!completedApps.includes(appTitle)) {
+        completedApps.push(appTitle);
+    }
+    
+    localStorage.setItem('completedApps', JSON.stringify(completedApps));
+    localStorage.setItem('appProgress', JSON.stringify(appProgress));
+    updateProgressDisplay();
+    
+    // Show celebration message
+    showProgressCelebration(appTitle);
+}
+
+// Toggle app completion status
+function toggleAppCompletion(appTitle) {
+    const isCompleted = completedApps.includes(appTitle);
+    
+    if (isCompleted) {
+        // Mark as incomplete
+        completedApps = completedApps.filter(title => title !== appTitle);
+        appProgress[appTitle].completed = false;
+        appProgress[appTitle].completedDate = null;
+    } else {
+        // Mark as complete
+        markAppCompleted(appTitle);
+    }
+    
+    localStorage.setItem('completedApps', JSON.stringify(completedApps));
+    localStorage.setItem('appProgress', JSON.stringify(appProgress));
+    updateProgressDisplay();
+}
+
+// Update progress display in hero section
+function updateProgressDisplay() {
+    const totalApps = apps.length;
+    const completedCount = completedApps.length;
+    const startedCount = Object.values(appProgress).filter(p => p.started && !p.completed).length;
+    const progressPercentage = Math.round((completedCount / totalApps) * 100);
+    
+    // Update the hero stats (keeping original design)
+    const heroStats = document.querySelector('.hero-stats');
+    if (heroStats) {
+        // Find or create progress stat
+        let progressStat = heroStats.querySelector('.progress-stat');
+        if (!progressStat) {
+            progressStat = document.createElement('div');
+            progressStat.className = 'stat-item progress-stat';
+            heroStats.appendChild(progressStat);
+        }
+        
+        progressStat.innerHTML = `
+            <span class="stat-number">${completedCount}/${totalApps}</span>
+            <span class="stat-label">Completed (${progressPercentage}%)</span>
+        `;
+    }
+    
+    // Update app cards with progress indicators
+    updateAppCardsProgress();
+}
+
+// Update app cards with progress indicators (minimal visual change)
+function updateAppCardsProgress() {
+    const appCards = document.querySelectorAll('.app-card');
+    appCards.forEach(card => {
+        const title = card.querySelector('.app-title').textContent;
+        const isCompleted = completedApps.includes(title);
+        const isStarted = appProgress[title] && appProgress[title].started;
+        
+        // Add subtle progress indicator to existing rank circle
+        const rankElement = card.querySelector('.app-rank');
+        if (rankElement) {
+            if (isCompleted) {
+                rankElement.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                rankElement.innerHTML = '✓';
+            } else if (isStarted) {
+                rankElement.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+            } else {
+                rankElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                rankElement.innerHTML = card.dataset.rank || rankElement.textContent;
+            }
+        }
+        
+        // Add click handler for completion toggle
+        if (!card.dataset.progressHandlerAdded) {
+            const buildBtn = card.querySelector('.build-btn');
+            if (buildBtn) {
+                // Add completion checkbox to build button area (keeping original design)
+                const progressContainer = document.createElement('div');
+                progressContainer.style.cssText = 'display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = isCompleted;
+                checkbox.style.cssText = 'width: 18px; height: 18px; accent-color: #10b981;';
+                checkbox.addEventListener('change', (e) => {
+                    e.stopPropagation();
+                    toggleAppCompletion(title);
+                });
+                
+                const label = document.createElement('label');
+                label.textContent = 'Mark as completed';
+                label.style.cssText = 'font-size: 0.875rem; color: #6b7280; cursor: pointer;';
+                label.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    checkbox.checked = !checkbox.checked;
+                    toggleAppCompletion(title);
+                });
+                
+                progressContainer.appendChild(checkbox);
+                progressContainer.appendChild(label);
+                buildBtn.parentNode.appendChild(progressContainer);
+                
+                card.dataset.progressHandlerAdded = 'true';
+            }
+        }
+    });
+}
+
+// Show celebration when app is completed
+function showProgressCelebration(appTitle) {
+    const celebration = document.createElement('div');
+    celebration.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        z-index: 1001;
+        text-align: center;
+        animation: celebrationPop 0.5s ease;
+    `;
+    
+    celebration.innerHTML = `
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
+        <h3 style="margin-bottom: 0.5rem;">Congratulations!</h3>
+        <p>You completed <strong>${appTitle}</strong>!</p>
+        <p style="margin-top: 1rem; opacity: 0.9;">${completedApps.length} of ${apps.length} apps completed</p>
+    `;
+    
+    // Add animation keyframes
+    if (!document.querySelector('#celebration-styles')) {
+        const style = document.createElement('style');
+        style.id = 'celebration-styles';
+        style.textContent = `
+            @keyframes celebrationPop {
+                0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+                100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(celebration);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        celebration.remove();
+    }, 3000);
+}
+
+// Random App Generator
+function getRandomApp() {
+    // Filter out completed apps for better suggestions
+    const uncompletedApps = apps.filter(app => !completedApps.includes(app.title));
+    const appsToChooseFrom = uncompletedApps.length > 0 ? uncompletedApps : apps;
+    
+    const randomIndex = Math.floor(Math.random() * appsToChooseFrom.length);
+    return appsToChooseFrom[randomIndex];
+}
+
+function showRandomApp() {
+    const randomApp = getRandomApp();
+    
+    // Create random app modal (keeping original modal design)
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎲 Random App Suggestion</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">🎯</div>
+                    <h3 style="color: #667eea; margin-bottom: 1rem;">${randomApp.title}</h3>
+                    <p style="color: #6b7280; margin-bottom: 1.5rem;">${randomApp.description}</p>
+                    
+                    <div style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem;">
+                        <span style="background: #f3f4f6; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.875rem;">
+                            ${'★'.repeat(randomApp.difficulty)}${'☆'.repeat(5 - randomApp.difficulty)} Difficulty
+                        </span>
+                        <span style="background: #f3f4f6; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.875rem;">
+                            ${randomApp.category}
+                        </span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: center; gap: 1rem;">
+                        <button onclick="startBuilding('${randomApp.title}'); closeModal();" 
+                                style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                            Start Building This! 🚀
+                        </button>
+                        <button onclick="showRandomApp()" 
+                                style="background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                            Try Another 🎲
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="step-section">
+                    <h3>✨ Why This App?</h3>
+                    <ul style="color: #6b7280; margin-left: 1.5rem;">
+                        ${randomApp.features.map(feature => `<li>${feature}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div class="step-section">
+                    <h3>🏷️ Technologies You'll Learn</h3>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        ${randomApp.tags.map(tag => 
+                            `<span style="background: #e0e7ff; color: #3730a3; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.875rem;">${tag}</span>`
+                        ).join('')}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+}
+
+// Add random app button to hero section
+function addRandomAppButton() {
+    const heroContainer = document.querySelector('.hero .container');
+    if (heroContainer && !document.querySelector('.random-app-btn')) {
+        const randomBtn = document.createElement('button');
+        randomBtn.className = 'random-app-btn';
+        randomBtn.innerHTML = '🎲 Surprise Me!';
+        randomBtn.style.cssText = `
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 1rem;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        `;
+        
+        randomBtn.addEventListener('mouseenter', () => {
+            randomBtn.style.background = 'rgba(255, 255, 255, 0.3)';
+            randomBtn.style.transform = 'translateY(-2px)';
+        });
+        
+        randomBtn.addEventListener('mouseleave', () => {
+            randomBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+            randomBtn.style.transform = 'translateY(0)';
+        });
+        
+        randomBtn.addEventListener('click', showRandomApp);
+        
+        // Add after search container
+        const searchContainer = heroContainer.querySelector('.search-container');
+        if (searchContainer) {
+            searchContainer.parentNode.insertBefore(randomBtn, searchContainer.nextSibling);
+        }
+    }
+}
+
+// Enhanced start building to mark as started
+const originalStartBuildingEnhanced = startBuildingEnhanced;
+function startBuildingWithProgress(appTitle) {
+    markAppStarted(appTitle);
+    originalStartBuildingEnhanced(appTitle);
+}
+
+// Override the start building function
+startBuilding = startBuildingWithProgress;
+
+// Initialize progress tracker and random app generator
+document.addEventListener('DOMContentLoaded', function() {
+    // Small delay to ensure original DOM is loaded
+    setTimeout(() => {
+        initializeProgressTracker();
+        addRandomAppButton();
+    }, 100);
+});
+
+// Re-render progress when apps are filtered/searched
+const originalRenderApps = renderApps;
+renderApps = function(appsToRender = apps) {
+    originalRenderApps(appsToRender);
+    // Small delay to ensure cards are rendered
+    setTimeout(updateAppCardsProgress, 50);
+};
